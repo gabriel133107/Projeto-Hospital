@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Clínica TRB</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Tela de Login / Cadastro -->
+    <div id="tela-login" class="container-login">
+        <!-- Box Login -->
+        <div id="box-login" class="box-auth">
+            <h2><i class="fa-solid fa-notes-medical"></i> Clínica TRB</h2>
+            <form id="form-login" onsubmit="realizarLogin(event)">
+                <select id="login-perfil" required>
+                    <option value="" disabled selected>Selecione o perfil...</option>
+                    <option value="admin">Administrador</option>
+                    <option value="profissional">Profissional da Saúde</option>
+                    <option value="paciente">Paciente</option>
+                </select>
+                <input type="email" id="login-usuario" placeholder="E-mail" required>
+                <input type="password" id="login-senha" placeholder="Senha" required>
+                <button type="submit" class="btn-primario">Entrar</button>
+                <p>Não possui conta? <a href="#" onclick="mostrarCadastro(event)">Cadastre-se</a></p>
+            </form>
+        </div>
+
+        <!-- Box Cadastro -->
+        <div id="box-cadastro" class="box-auth oculto">
+            <h2>Nova Conta</h2>
+            <form id="form-cadastro" onsubmit="realizarCadastro(event)">
+                <select id="cad-perfil" onchange="mudarCamposCadastro()" required>
+                    <option value="" disabled selected>Selecione o tipo de conta...</option>
+                    <option value="paciente">Paciente</option>
+                    <option value="profissional">Profissional da Saúde</option>
+                </select>
+
+                <input type="text" id="cad-nome" placeholder="Nome Completo" required>
+                <input type="email" id="cad-email" placeholder="E-mail (@gmail.com, @outlook.com...)" required>
+                <input type="password" id="cad-senha" placeholder="Senha (Mín. 8 caracteres, 1 Maiúscula, 1 Número, 1 Especial)" required>
+
+                <!-- Campos Paciente -->
+                <div id="campos-paciente" class="oculto">
+                    <input type="text" id="cad-cpf" placeholder="CPF" oninput="mascaraCPF(this)">
+                    <input type="text" id="cad-telefone" placeholder="Telefone" oninput="mascaraTelefone(this)">
+                    <label style="font-size: 0.85rem; color: #555;">Data de Nascimento:</label>
+                    <input type="date" id="cad-nascimento">
+                </div>
+
+                <!-- Campos Profissional -->
+                <div id="campos-profissional" class="oculto">
+                    <input type="text" id="cad-registro" placeholder="Número de Registro (CRM/CRO - Somente números)">
+                    <select id="cad-especialidade">
+                        <!-- Preenchido via JS -->
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primario">Criar Conta</button>
+                <p>Já possui conta? <a href="#" onclick="mostrarLogin(event)">Fazer Login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div id="conteudo-sistema" class="oculto">
+        <header class="navbar">
+            <div class="logo"><i class="fa-solid fa-notes-medical"></i> Clínica TRB</div>
+            <div class="user-info">
+                <span id="nome-usuario-logado"></span>
+                <button onclick="realizarLogout()" class="btn-sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <aside class="sidebar">
+                <button id="btn-nav-dashboard" class="ativo" onclick="mostrarAba('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+                <button id="btn-nav-consultas" onclick="mostrarAba('consultas')"><i class="fa-solid fa-calendar-days"></i> Agendamentos</button>
+                <button id="btn-nav-pacientes" onclick="mostrarAba('pacientes')"><i class="fa-solid fa-users"></i> Pacientes</button>
+                <button id="btn-nav-profissionais" onclick="mostrarAba('profissionais')"><i class="fa-solid fa-user-doctor"></i> Profissionais</button>
+            </aside>
+
+            <main class="content">
+                <!-- Aba Dashboard -->
+                <section id="aba-dashboard">
+                    <h2>Resumo</h2>
+                    <div class="cards-resumo">
+                        <div class="card">
+                            <h3>Consultas Hoje</h3>
+                            <p id="dash-consultas-hoje" class="numero-destaque">0</p>
+                        </div>
+                        <div class="card">
+                            <h3>Total Agendadas</h3>
+                            <p id="dash-consultas-agendadas" class="numero-destaque">0</p>
+                        </div>
+                        <div class="card">
+                            <h3>Pacientes Cadastrados</h3>
+                            <p id="dash-total-pacientes" class="numero-destaque">0</p>
+                        </div>
+                        <div class="card">
+                            <h3>Profissionais Cadastrados</h3>
+                            <p id="dash-total-profissionais" class="numero-destaque">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Aba Consultas -->
+                <section id="aba-consultas" class="oculto">
+                    <h2>Gestão de Consultas</h2>
+                    
+                    <div class="box-form">
+                        <h3>Agendar Consulta</h3>
+                        <form id="form-consulta" onsubmit="salvarConsulta(event)">
+                            <input type="hidden" id="cons-id">
+                            <div class="form-grid">
+                                <select id="cons-paciente" required></select>
+                                <select id="cons-especialidade" required>
+                                    <option value="" disabled selected>1º Selecione a especialidade...</option>
+                                </select>
+                                <select id="cons-profissional" disabled required>
+                                    <option value="">2º Selecione o especialista...</option>
+                                </select>
+                                <input type="date" id="cons-data" required>
+                                <input type="time" id="cons-horario" required>
+                                <select id="cons-situacao">
+                                    <option value="Agendada" selected>Agendada</option>
+                                    <option value="Realizada">Realizada</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+                            </div>
+                            <textarea id="cons-observacao" placeholder="Observações..." rows="2"></textarea>
+                            <button type="submit" id="btn-salvar-consulta" class="btn-primario"><i class="fa-solid fa-calendar-check"></i> Salvar Agendamento</button>
+                        </form>
+                    </div>
+
+                    <input type="text" id="pesquisa-consulta" placeholder="Pesquisar por paciente, médico ou status..." oninput="renderizarConsultas()" class="input-pesquisa">
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Paciente</th><th>Médico</th><th>Especialidade</th><th>Data</th><th>Horário</th><th>Status</th><th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-consultas"></tbody>
+                    </table>
+                </section>
+
+                <!-- Aba Pacientes -->
+                <section id="aba-pacientes" class="oculto">
+                    <h2>Pacientes</h2>
+                    <input type="text" id="pesquisa-paciente" placeholder="Pesquisar por nome ou CPF..." oninput="renderizarPacientes()" class="input-pesquisa">
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Nome</th><th>CPF</th><th>Nascimento / Idade</th><th>Telefone</th><th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-pacientes"></tbody>
+                    </table>
+                </section>
+
+                <!-- Aba Profissionais -->
+                <section id="aba-profissionais" class="oculto">
+                    <h2>Profissionais</h2>
+                    <input type="text" id="pesquisa-profissional" placeholder="Pesquisar por nome ou especialidade..." oninput="renderizarProfissionais()" class="input-pesquisa">
+                    <table class="tabela-dados">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Nome</th><th>Especialidade</th><th>Telefone</th><th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-profissionais"></tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Edição -->
+    <div id="modal-edicao" class="modal oculto">
+        <div class="modal-content">
+            <span class="fechar-modal" onclick="fecharModalEdicao()">&times;</span>
+            <h2>Editar Usuário</h2>
+            <form id="form-edicao" onsubmit="salvarEdicaoUsuario(event)">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-perfil">
+                
+                <label>Nome:</label>
+                <input type="text" id="edit-nome" required>
+                
+                <label>Telefone:</label>
+                <input type="text" id="edit-telefone" oninput="mascaraTelefone(this)">
+
+                <div id="edit-campos-paciente" class="oculto">
+                    <label>CPF:</label>
+                    <input type="text" id="edit-cpf" oninput="mascaraCPF(this)">
+                    <label>Data de Nascimento:</label>
+                    <input type="date" id="edit-nascimento">
+                </div>
+
+                <div id="edit-campos-profissional" class="oculto">
+                    <label>Especialidade:</label>
+                    <select id="edit-especialidade"></select>
+                </div>
+
+                <button type="submit" class="btn-primario" style="margin-top: 15px; width: 100%;">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast de Notificação -->
+    <div id="toast-notificacao" class="oculto"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
